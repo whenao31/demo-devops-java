@@ -18,6 +18,12 @@ Clone this repo.
 git clone https://bitbucket.org/devsu/demo-devops-java.git
 ```
 
+### Database
+
+The database is generated as a file in the main path when the project is first run, and its name is `test.mv.db`.
+
+Consider giving access permissions to the file for proper functioning.
+
 ## Usage
 
 To run tests you can use this command.
