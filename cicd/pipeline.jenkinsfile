@@ -1,0 +1,47 @@
+pipeline {
+    agent none
+    
+    stages {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'openjdk:17-jdk-slim'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            steps {
+                sh './mvnw -V clean install -DskipTests -DskipITs -DskipDocs'
+            }
+        }
+
+        stage('Unit Testing') {
+            agent {
+                docker {
+                    image 'openjdk:17-jdk-slim'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            steps {
+                sh './mvnw clean test'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                SONAR_TOKEN = credentials('SONAR_TOKEN')
+            }
+            agent {
+                docker { 
+                    image 'amazoncorretto:11.0.16-alpine3.15'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            steps {                
+                withSonarQubeEnv('sonarqube') {
+                    sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=devsu-devops_test'
+                }
+            }
+        }
+    }
+    
+}
