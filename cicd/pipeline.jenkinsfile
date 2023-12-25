@@ -1,6 +1,6 @@
 pipeline {
     agent none
-    
+
     stages {
         stage('Build') {
             agent {
@@ -32,13 +32,14 @@ pipeline {
             }
             agent {
                 docker { 
-                    image 'amazoncorretto:11.0.16-alpine3.15'
+                    image 'openjdk:17-jdk-slim'
                     args  '--entrypoint="" -u root --network host'
                 }
             }
             steps {                
                 withSonarQubeEnv('sonarqube') {
-                    sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=devsu-devops_test'
+                    sh './mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=devsu-devops_test'
+                    // sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=devsu-devops_test'
                 }
             }
         }
