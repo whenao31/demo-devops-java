@@ -22,7 +22,13 @@ pipeline {
                 }
             }
             steps {
-                sh './mvnw clean test'
+                sh './mvnw test'
+                sh 'ls -lh target/surefire-reports/'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
         }
 
