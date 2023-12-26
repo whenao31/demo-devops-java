@@ -21,6 +21,11 @@ pipeline {
                     args  '--entrypoint="" -u root --network host'
                 }
             }
+            
+            environment {
+                NAME_DB = credentials('NAME_DB')
+            }
+
             steps {
                 sh './mvnw test'
                 sh 'ls -lh target/surefire-reports/'
@@ -35,6 +40,7 @@ pipeline {
         stage('Sonar Analysis') {
             environment {
                 SONAR_TOKEN = credentials('SONAR_TOKEN')
+                NAME_DB = credentials('NAME_DB')
             }
             agent {
                 docker { 
