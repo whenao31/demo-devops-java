@@ -64,7 +64,7 @@ pipeline {
             }
         }
 
-        stage('Image build and push') {
+        stage('Docker Image build and push') {
             agent any
             environment {
                 DH_TOKEN = credentials('DOCKERHUB_TOKEN')
