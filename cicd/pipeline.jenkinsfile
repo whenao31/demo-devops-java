@@ -50,6 +50,7 @@ pipeline {
         }
 
         stage("Quality Gate") {
+            agent any
             steps {
                 script {
                     def qualitygate = waitForQualityGate()
