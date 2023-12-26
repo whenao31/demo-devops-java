@@ -45,7 +45,20 @@ pipeline {
             steps {                
                 withSonarQubeEnv('sonarqube') {
                     sh './mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=devsu-devops_test'
-                    // sh './mvnw clean verify sonar:sonar -Dsonar.projectKey=devsu-devops_test'
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                script {
+                    def qualitygate = waitForQualityGate()
+                    if (qualitygate.status != "OK") {
+                        input message: "Do you want to go on with the pipeline despite the low coverage?"
+                        //error "Pipeline aborted due to quality gate coverage failure: ${qualitygate.status}"
+                    }else{
+                        sh 'echo "Quality gate OK"'
+                    }
                 }
             }
         }
