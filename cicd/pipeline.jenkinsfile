@@ -63,6 +63,18 @@ pipeline {
                 }
             }
         }
+
+        stage('Image build and push') {
+            agent any
+            environment {
+                DH_TOKEN = credentials('DOCKERHUB_TOKEN')
+            }
+            steps {
+                sh 'docker build -t whenao31/demo-devops-java:${GIT_COMMIT} .'
+                sh 'echo $DH_TOKEN_PSW | docker login -u $DH_TOKEN_USR --password-stdin'
+                sh 'docker push whenao31/demo-devops-java:${GIT_COMMIT}'
+            }
+        }
     }
     
 }
