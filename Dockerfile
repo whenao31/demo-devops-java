@@ -17,8 +17,10 @@ COPY src/main/resources/application.properties /app/application.properties
 RUN chown appuser:appuser /app
 
 # Set environment variables
-ENV USERNAME_DB=${USERNAME_DB} \
-    PASSWORD_DB=${PASSWORD_DB}
+ENV NAME_DB=${NAME_DB} \
+    USERNAME_DB=${USERNAME_DB} \
+    PASSWORD_DB=${PASSWORD_DB} \
+    PORT=${PORT}
 
 # Expose port 8000
 EXPOSE 8000

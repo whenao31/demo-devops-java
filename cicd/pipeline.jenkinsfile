@@ -1,0 +1,190 @@
+pipeline {
+    agent none
+
+    environment {
+        GCP_PROJECT_ID = 'storied-cider-400415'
+        GCP_CLUSTER_NAME = 'devsu-devops-apps-cluster'
+        GCP_LOCATION = 'us-central1'
+        GCP_K8S_CREDENTIALS_ID = 'gke-sa-coco-final'
+    }
+
+    parameters {
+        booleanParam(name: 'installNginx', defaultValue: false, description: 'Install nginx')
+    }
+
+    stages {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'openjdk:17-jdk-slim'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            steps {
+                sh './mvnw -V clean install -DskipTests -DskipITs -DskipDocs'
+            }
+        }
+
+        stage('Unit Testing') {
+            agent {
+                docker {
+                    image 'openjdk:17-jdk-slim'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            
+            environment {
+                NAME_DB = credentials('NAME_DB')
+                PORT = '8000'
+            }
+
+            steps {
+                sh './mvnw test'
+                sh 'ls -lh target/surefire-reports/'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                SONAR_TOKEN = credentials('SONAR_TOKEN')
+                NAME_DB = credentials('NAME_DB')
+                PORT = '8000'
+            }
+            agent {
+                docker { 
+                    image 'openjdk:17-jdk-slim'
+                    args  '--entrypoint="" -u root --network host'
+                }
+            }
+            steps {                
+                withSonarQubeEnv('sonarqube') {
+                    sh './mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=devsu-devops_test'
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            agent any
+            steps {
+                script {
+                    def qualitygate = waitForQualityGate()
+                    if (qualitygate.status != "OK") {
+                        input message: "Do you want to go on with the pipeline despite the low coverage?"
+                        //error "Pipeline aborted due to quality gate coverage failure: ${qualitygate.status}"
+                    }else{
+                        sh 'echo "Quality gate OK"'
+                    }
+                }
+            }
+        }
+
+        stage('Docker Image build and push') {
+            agent any
+            environment {
+                DH_TOKEN = credentials('DOCKERHUB_TOKEN')
+            }
+            steps {
+                sh 'docker build -t whenao31/demo-devops-java:${GIT_COMMIT} .'
+                sh 'echo $DH_TOKEN_PSW | docker login -u $DH_TOKEN_USR --password-stdin'
+                sh 'docker push whenao31/demo-devops-java:${GIT_COMMIT}'
+            }
+        }
+
+        stage('Deploy nginx controller for the ingress to the cluster') {
+            agent any
+            when {
+                equals expected: true, actual: params.installNginx
+            }
+            steps {
+                sh '''
+                    wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml -O nginx-deploy.yaml
+                '''
+                
+                step([
+                    $class: 'KubernetesEngineBuilder',
+                    projectId: env.GCP_PROJECT_ID,
+                    clusterName: env.GCP_CLUSTER_NAME,
+                    location: env.GCP_LOCATION,
+                    manifestPattern: 'nginx-deploy.yaml',
+                    credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                    verifyDeployments: true
+                ])
+            }
+        }
+
+        stage('Deploy apps to GKE') {
+            agent any
+            steps{
+                dir('k8s-manifests') {
+                    
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'namespace.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])
+                }
+                dir('k8s-manifests/backend/ms-devops-java-deploy') {
+                    sh "sed -i 's/demo-devops-java:APP_VERSION/demo-devops-java:${env.GIT_COMMIT}/g' k8s-deployment.yaml"
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'k8s-secrets.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'k8s-configmap.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'k8s-deployment.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])   
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'k8s-hpa.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])    
+                }
+                dir('k8s-manifests/ingress') {
+                    
+                    step([
+                        $class: 'KubernetesEngineBuilder',
+                        projectId: env.GCP_PROJECT_ID,
+                        clusterName: env.GCP_CLUSTER_NAME,
+                        location: env.GCP_LOCATION,
+                        manifestPattern: 'apps-ingress.yaml',
+                        credentialsId: env.GCP_K8S_CREDENTIALS_ID,
+                        verifyDeployments: false
+                    ])
+                }
+            }
+        }
+    }
+    
+}

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-devops-cm
+  namespace: apps
+data:
+  # Non-sensitive configuration data
+  spring.jpa.hibernate.ddl-auto: create
+  spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
+  spring.sql.init.mode: always
+  spring.sql.init.platform: h2
+  server.port: "8000"
