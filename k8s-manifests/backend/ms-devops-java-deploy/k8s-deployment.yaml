@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-devops-deploy
+  namespace: apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-devops
+  template:
+    metadata:
+      labels:
+        app: demo-devops
+    spec:
+      containers:
+      - name: demo-devops
+        image: whenao31/demo-devops-java:APP_VERSION
+        # image: whenao31/demo-devops-java:fb2e968dc8961387cab4a99a0ad72abf49e8c8aa
+        ports:
+          - containerPort: 8000
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        envFrom:
+        - configMapRef:
+            name: demo-devops-cm
+        - secretRef:
+            name: demo-devops-db-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-devops-svc
+  namespace: apps
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  selector:
+    app: demo-devops
+  ports:
+  - port: 8002
+    targetPort: 8000
+  type: ClusterIP
