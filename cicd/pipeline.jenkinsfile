@@ -118,6 +118,7 @@ pipeline {
         }
 
         stage('Deploy apps to GKE') {
+            agent any
             steps{
                 dir('k8s-manifests') {
                     
