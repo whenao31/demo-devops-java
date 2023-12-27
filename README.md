@@ -1,142 +1,35 @@
-# Demo Devops Java
+# Devops Prueba tecnica
 
-This is a simple application to be used in the technical test of DevOps.
+## Descripcion de la solución
 
-## Getting Started
+La solucion a la prueba técnica involucra las siguientes herramientas y stacks tecbológicos:
 
-### Prerequisites
+* VCS: Git/GitHub
 
-- Java Version 17
-- Spring Boot 3.0.5
-- Maven
+* Codebase: Aplicación SpringBoot - Java con gestión de configuración con Maven.
 
-### Installation
+* Orquestador Ci/Cd: Jenkins corriendo en una instancia EC2 en AWS.
 
-Clone this repo.
+* Static Code Analysis: SonarQube a través de su SaaS SonarCloud.
 
-```bash
-git clone https://bitbucket.org/devsu/demo-devops-java.git
-```
+* Container image registry: Docker Hub.
 
-### Database
+* Infraestructura: Cluster de Kubernetes administrado GKE en GCP y manejado como IaC por Terraform.
 
-The database is generated as a file in the main path when the project is first run, and its name is `test.mv.db`.
+### Diagrama
 
-Consider giving access permissions to the file for proper functioning.
+A continuacion de presenta el correspondiente diagrama que representa la solución y como se hizo uso de las herramientas y stack utilizados
 
-## Usage
+![](images/Devsu-devops2.drawio.png)
 
-To run tests you can use this command.
 
-```bash
-mvn clean test
-```
+### Posibles mejoras
 
-To run locally the project you can use this command.
+* Implementar HTTPS/TLS para acceder a los endpoints de la aplicacion. Esto se conseguiría implementando el servicio cert-manager dentro del cluster K8s.
+* Para acceder al servicio a traves de un nombre de dominio tambien se podría implementar DNS con el mismo proveedor de nube u otro provedor de este tipo de servicios.
 
-```bash
-mvn spring-boot:run
-```
-
-Open http://127.0.0.1:8000/api/swagger-ui.html with your browser to see the result.
-
-### Features
-
-These services can perform,
-
-#### Create User
-
-To create a user, the endpoint **/api/users** must be consumed with the following parameters:
-
-```bash
-  Method: POST
-```
-
-```json
-{
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-{
-    "id": 1,
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the response is unsuccessful, we will receive status 400 and the following message:
-
-```json
-{
-    "errors": [
-        "error"
-    ]
-}
-```
-
-#### Get Users
-
-To get all users, the endpoint **/api/users** must be consumed with the following parameters:
-
-```bash
-  Method: GET
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-[
-    {
-        "id": 1,
-        "dni": "dni",
-        "name": "name"
-    }
-]
-```
-
-#### Get User
-
-To get an user, the endpoint **/api/users/<id>** must be consumed with the following parameters:
-
-```bash
-  Method: GET
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-{
-    "id": 1,
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the user id does not exist, we will receive status 404 and the following message:
-
-```json
-{
-    "errors": [
-        "User not found: <id>"
-    ]
-}
-```
-
-If the response is unsuccessful, we will receive status 400 and the following message:
-
-```json
-{
-    "errors": [
-        "error"
-    ]
-}
-```
-
-## License
-
-Copyright © 2023 Devsu. All rights reserved.
+> **Notes:**
+> La url publica donde se encuentra expuesta la app: http://35.226.140.75/
+> La url publica con la documentación de la API: http://35.226.140.75/api/swagger-ui/index.html
+> #### La app se encuentra disponible publicamento solo hasta mañana jueves 28 de diciembre!
+> 
