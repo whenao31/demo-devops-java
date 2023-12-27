@@ -27,6 +27,7 @@ A continuacion de presenta el correspondiente diagrama que representa la soluci�
 
 * Implementar HTTPS/TLS para acceder a los endpoints de la aplicacion. Esto se conseguiría implementando el servicio cert-manager dentro del cluster K8s.
 * Para acceder al servicio a traves de un nombre de dominio tambien se podría implementar DNS con el mismo proveedor de nube u otro provedor de este tipo de servicios.
+* Implementar una instancia para almacenamiento en cache para la aplicación(Redis) de tal manera que se hagan mas ágiles las consultas frecuentes de la app a la DB en caso que la DB se encuentre en una capa diferente.
 
 > **Notes:**
 > La url publica donde se encuentra expuesta la app: http://35.226.140.75/
