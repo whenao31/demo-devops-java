@@ -16,7 +16,6 @@ spec:
       containers:
       - name: demo-devops
         image: whenao31/demo-devops-java:APP_VERSION
-        # image: whenao31/demo-devops-java:fb2e968dc8961387cab4a99a0ad72abf49e8c8aa
         ports:
           - containerPort: 8000
         resources:
@@ -26,14 +25,6 @@ spec:
           requests:
             cpu: 200m
             memory: 256Mi
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 3
         envFrom:
         - configMapRef:
             name: demo-devops-cm
