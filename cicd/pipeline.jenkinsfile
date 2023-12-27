@@ -95,7 +95,7 @@ pipeline {
             }
         }
 
-        stage('Deploy nginx controller on the cluster') {
+        stage('Deploy nginx controller for the ingress to the cluster') {
             agent any
             when {
                 equals expected: true, actual: params.installNginx
